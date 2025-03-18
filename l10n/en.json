@@ -1,0 +1,11 @@
+{
+	"menu_l_global_value_burstfiremod" : "This is a modding community item!",
+	"bm_wp_wpn_fps_upg_i_burstfire" : "Burst Fire",
+	"bm_wp_wpn_fps_upg_i_burstfire_desc" : "Forces your weapon into burst-fire mode. Uses your Burst Fire Count setting.",
+	"menu_burstfiremod_title" : "Burst Fire Standalone Settings",
+	"menu_burstfiremod_desc" : "Edit settings for the Burst Fire Standalone mod...",
+	"menu_burstfiremod_default_burst_count_title" : "Default Burst Count",
+	"menu_burstfiremod_default_burst_count_desc" : "Set how many rounds are in a burst (if the weapon does not already have a burst count defined in its stats).",
+	"menu_burstfiremod_use_global_burst_title" : "Allow Burst-fire Toggle",
+	"menu_burstfiremod_use_global_burst_desc" : "If a weapon's firemode can be toggled normally, allow it to also toggle to Burst-fire mode.\nDoes not affect the Burst Fire attachment."
+}

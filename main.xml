@@ -1,0 +1,32 @@
+<mod name="Burst Fire Standalone" author="Offyerrocker" min_lib_ver="3.38">
+	<Localization directory="l10n" default="en.json">
+		<loc file="en.json" language="english"/>
+	</Localization>
+	<AssetUpdates id="51457" version="1.0.0" provider="modworkshop"/>
+
+	<GlobalValue id="burstfiremod" color="Color(0.33,0.66,1)"/>
+
+	<WeaponMod id="wpn_fps_upg_i_burstfire" based_on="wpn_fps_upg_i_autofire" type="custom" sub_type="autofire" has_description="true" hidden="false" guess_unit="false" global_value="burstfiremod" ver="2" third_unit="units/payday2/weapons/wpn_upg_dummy/wpn_upg_dummy" unit="units/payday2/weapons/wpn_upg_dummy/wpn_upg_dummy" >
+		<perks>
+			<value_node value="fire_mode_burst"/>
+		</perks>
+		<stats
+			damage="0"
+			spread="2"
+			recoil="2"
+			value="1"
+		/>
+	</WeaponMod>
+
+	<!-- IOU one blackmarket icon
+	<AddFiles directory="assets">
+		<texture path="guis/dlcs/mods/textures/pd2/blackmarket/icons/mods/wpn_fps_upg_i_burstfire"/>	
+	</AddFiles>
+	-->
+	
+	<Hooks directory="hooks">
+		<hook file="core.lua" source_file="lib/entry"/>
+		<hook file="weaponfactorytweakdata.lua" source_file="lib/tweak_data/weaponfactorytweakdata"/>
+		<hook file="newraycastweaponbase.lua" source_file="lib/units/weapons/newraycastweaponbase"/>
+	</Hooks> 
+</mod>
