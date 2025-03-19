@@ -63,6 +63,7 @@ function BlackMarketGui:open_customize_burstfire_menu(data)
 			category = data.category,
 			slot = data.slot,
 			burst_count_options = BurstFireMod._LOOKUP_BURST_COUNT,
+			default_value = BurstFireMod.default_settings.default_burst_count,
 			current_value = current_value
 		}
 	})

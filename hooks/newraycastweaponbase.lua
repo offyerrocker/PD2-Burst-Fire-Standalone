@@ -163,7 +163,12 @@ Hooks:PostHook(NewRaycastWeaponBase,"clbk_assembly_complete","weaponbase_burstfi
 	local slot = managers.blackmarket:equipped_weapon_slot(category)
 	local crafted = managers.blackmarket:get_crafted_category_slot(category, slot)
 	if crafted then 
-		self._custom_burst_count = crafted.part_burst_count
+		if crafted.part_burst_count == 1 then
+			-- use custom stat count from attachment, or mod setting default
+			self._custom_burst_count = nil
+		else
+			self._custom_burst_count = crafted.part_burst_count
+		end
 		-- cache burst count from part customization;
 		-- no need to query blackmarketmanager every time for this
 	end

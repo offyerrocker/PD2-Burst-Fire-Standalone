@@ -28,52 +28,42 @@ function MenuCustomizeBurstfireInitiator:setup_node(node, node_data)
 	--	return node
 	--end
 	
+	self:create_divider(node, "padding", nil, 4)
+	
 	if node_data.burst_count_options then 
 		
-		local burstcount_options = {}
-		local default_value = 2
+		local burstcount_options = {
+			{
+				_meta = "option",
+				localize = true,
+				text_id = "menu_burstfiremod_burst_count_use_default",
+				value = 1,
+				index = 1
+			}
+		}
+		local default_value = node_data.default_value
+		local current_value = node_data.current_value
 		for i,v in ipairs(node_data.burst_count_options) do
 			table.insert(burstcount_options,{
 				_meta = "option",
 				localize = false,
 				text_id = tostring(v),
 				value = v,
-				index = i
+				index = i + 1
 			})
-			
+			table.sort(burstcount_options,function(a,b) return a.index < b.index end)
+		end
+		for _,b_opt in pairs(burstcount_options) do 
 			-- verify current burst value
-			if v == node_data.current_value then
-				default_value = v
+			if b_opt.value == current_value then
+				default_value = b_opt.value
+				break
 			elseif not default_value then
-				default_value = v
+				default_value = b_opt.value
+				break
 			end
 		end
 		
-		--[[
-		local burstcount_options = {
-			{
-				localize = true,
-				_meta = "option",
-				value = "2",
-				text_id = "menu_burstfiremod_wp_mod_burst_count_2",
-				index = 1
-			},
-			{
-				localize = true,
-				_meta = "option",
-				value = "3",
-				text_id = "menu_burstfiremod_wp_mod_burst_count_3",
-				index = 2
-			},
-			{
-				localize = true,
-				_meta = "option",
-				value = "4",
-				text_id = "menu_burstfiremod_wp_mod_burst_count_4",
-				index = 3
-			}
-		}
-		--]]
 		local burstcount_item = self:create_multichoice(node, burstcount_options, {
 			callback = "callback_burstfiremod_wp_mod_set_burst_count",
 			visible_callback = "should_show_weapon_burstfire_count_apply",
@@ -162,7 +152,7 @@ function MenuNodeCustomizeBurstGui:_setup_item_panel(safe_rect, res, ...)
 	
 	
 	self.item_panel:set_w(safe_rect.width * (1 - self._align_line_proportions))
-	self.item_panel:set_h(safe_rect.height * (1 - self._align_line_proportions))
+	self.item_panel:set_h(safe_rect.height * (0.15))
 	self.item_panel:set_center(self.item_panel:parent():w() / 2, self.item_panel:parent():h() / 2)
 	
 	local static_y = self.static_y and safe_rect.height * self.static_y
@@ -339,16 +329,47 @@ function MenuNodeCustomizeBurstGui:confirm_pressed()
 	return true
 end
 
+function MenuNodeCustomizeBurstGui:_highlight_row_item(row_item,mouse_over,...)
+	MenuNodeCustomizeBurstGui.super._highlight_row_item(self,row_item,mouse_over,...)
+	local row_index = table.index_of(self.row_items,row_item)
+	if row_index then 
+		self._row_selection_index = row_index - 1
+	end
+end
+
 function MenuNodeCustomizeBurstGui:move_up()
 	local active_menu = managers.menu:active_menu()
 	if not active_menu then
 		return
 	end
+	local selection_index = self._row_selection_index
+	local index_start = selection_index
+	local num_items = #self.row_items
+	while true do 
+		selection_index = (selection_index - 1) % num_items
+		if selection_index == index_start then
+			selection_index = nil
+			break
+			-- full loop, no other valid selections; abort selection
+		else
+			local row_item = self.row_items[selection_index + 1]
+			local item = row_item and row_item.item
+			if item and item._type ~= "divider" then -- todo chk can_select() or whatever
+				-- found next valid object; break and select
+				break
+			end
+		end
+	end
 	
-	self._row_selection_index = (self._row_selection_index + 1) % #self.row_items
-	self:_highlight_row_item(self.row_items[self._row_selection_index+1],false)
-	active_menu.logic:select_item(self.row_items[self._row_selection_index+1].item)
-	active_menu.input:post_event("selection_previous")
+	if selection_index then
+		--self._row_selection_index = selection_index -- let set highlight manage this (for mouse compat)
+		local row_item = self.row_items[selection_index+1]
+		self:_fade_row_item(self.row_items[index_start+1])
+		self:_highlight_row_item(row_item,false)
+		active_menu.logic:select_item(row_item.item)
+		active_menu.input:post_event("selection_previous")
+	end
+	
 	return true
 end
 
@@ -357,11 +378,33 @@ function MenuNodeCustomizeBurstGui:move_down()
 	if not active_menu then
 		return
 	end
+	local selection_index = self._row_selection_index
+	local index_start = selection_index
+	local num_items = #self.row_items
+	while true do 
+		selection_index = (selection_index + 1) % num_items
+		if selection_index == index_start then
+			selection_index = nil
+			break
+			-- full loop, no other valid selections; abort selection
+		else
+			local row_item = self.row_items[selection_index + 1]
+			local item = row_item and row_item.item
+			if item and item._type ~= "divider" then -- todo chk can_select() or whatever
+				-- found next valid object; break and select
+				break
+			end
+		end
+	end
 	
-	self._row_selection_index = (self._row_selection_index - 1) % #self.row_items
-	self:_highlight_row_item(self.row_items[self._row_selection_index+1],false)
-	active_menu.logic:select_item(self.row_items[self._row_selection_index+1].item)
-	active_menu.input:post_event("selection_next")
+	if selection_index then
+		--self._row_selection_index = selection_index -- let set highlight manage this (for mouse compat)
+		local row_item = self.row_items[selection_index+1]
+		self:_fade_row_item(self.row_items[index_start+1])
+		self:_highlight_row_item(row_item,false)
+		active_menu.logic:select_item(row_item.item)
+		active_menu.input:post_event("selection_previous")
+	end
 	return true
 end
 
