@@ -35,9 +35,15 @@ Hooks:PostHook(NewRaycastWeaponBase,"_update_stats_values","weaponbase_burstfire
 	-- set the burst count (again)
 	BurstFireMod.set_burst_count(self,BurstFireMod:get_default_burst_count())
 	
+	local is_underbarrel = self.is_underbarrel and self:is_underbarrel()
+	if not is_underbarrel and self._custom_burst_count then 
+		-- burst firemode part setting should override other parts that incidentally change burst count
+		self._burst_count = self._custom_burst_count
+		return
+	end
+	
 	local custom_stats = managers.weapon_factory:get_custom_stats_from_weapon(self._factory_id, self._blueprint)
 	local part_data = nil
-	local is_underbarrel = self.is_underbarrel and self:is_underbarrel()
 	local weap_factory_parts = tweak_data.weapon.factory.parts
 
 	for part_id, stats in pairs(custom_stats) do
@@ -150,4 +156,15 @@ Hooks:OverrideFunction(NewRaycastWeaponBase,"toggle_firemode",function(self, ski
 	end
 	
 	return orig_toggle_firemode(self,skip_post_event,...)
+end)
+
+Hooks:PostHook(NewRaycastWeaponBase,"clbk_assembly_complete","weaponbase_burstfiremod_assembly",function(self, clbk, parts, blueprint)
+	local category = tweak_data.weapon[self._name_id].use_data.selection_index == 2 and "primaries" or "secondaries"
+	local slot = managers.blackmarket:equipped_weapon_slot(category)
+	local crafted = managers.blackmarket:get_crafted_category_slot(category, slot)
+	if crafted then 
+		self._custom_burst_count = crafted.part_burst_count
+		-- cache burst count from part customization;
+		-- no need to query blackmarketmanager every time for this
+	end
 end)

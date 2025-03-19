@@ -10,6 +10,18 @@ BurstFireMod = BurstFireMod or {
 }
 BurstFireMod.settings = table.deep_map_copy(BurstFireMod.default_settings)
 
+BurstFireMod._LOOKUP_BURST_COUNT = {
+	2,
+	3,
+	4
+}
+BurstFireMod._REVERSE_LOOKUP_BURST_COUNT = {}
+for k,v in pairs(BurstFireMod._LOOKUP_BURST_COUNT) do 
+	BurstFireMod._REVERSE_LOOKUP_BURST_COUNT[v] = k
+end
+
+
+
 function BurstFireMod:get_default_burst_count()
 	return self.settings.default_burst_count
 end
@@ -40,71 +52,31 @@ function BurstFireMod:save_settings()
 end
 
 Hooks:Add("MenuManagerSetupCustomMenus", "burstfiremod_MenuManagerSetupCustomMenus", function(menu_manager, nodes)
-	--MenuHelper:NewMenu("blackmarket_customize_burstfire")
-
-	local menu_component_data = {
-		topic_id = "menu_burstfiremod_customize_burstfire",
-		init_callback_name = "nothing"
-	}
-	menu_component_data.init_callback_params = menu_component_data
-	
 	local new_node = {
 		_meta = "node",
-		align_line_proportions=0.7,
+		align_line_proportions = 0.7,
 		gui_class = "MenuNodeCustomizeBurstGui",
 --		menu_components = "blackmarket inventory_chats", -- attaching this makes the menu default to opening the steam inventory every time. undesirable
---		menu_component_data = menu_component_data,
 		modifier = "MenuCustomizeBurstfireInitiator",
 		name = "blackmarket_customize_burstfire",
 		refresh = "MenuCustomizeBurstfireInitiator",
 --		back_callback = "callback_burstfiremod_wp_mod_back",
 		scene_state = "blackmarket_crafting",
-		topic_id="menu_burstfiremod_customize_burstfire",
+		topic_id = "menu_burstfiremod_customize_burstfire",
 		[1] = {
 			["_meta"] = "default_item",
 			["name"] = "back"
 		}
 	}
 	local noed = core:import("CoreMenuNode").MenuNode:new(new_node)
-	noed:set_callback_handler(managers.menu._registered_menus.menu_main.callback_handler)
+	local main_menu = menu_manager:get_menu("menu_main")
+	if main_menu then 
+		noed:set_callback_handler(main_menu.callback_handler)
+	end
 	nodes["blackmarket_customize_burstfire"] = noed
 end)
 
-Hooks:Add("MenuManagerPopulateCustomMenus", "burstfiremod_MenuManagerPopulateCustomMenus", function(menu_manager, nodes)
---[[
-	MenuHelper:AddMultipleChoice({
-		id = "burstfiremod_wp_mod_set_burst_count",
-		title = "menu_burstfiremod_wp_mod_set_burst_count_title",
-		desc = "menu_burstfiremod_wp_mod_set_burst_count_desc",
-		callback = "callback_burstfiremod_wp_mod_set_burst_count",
-		items = {
-			"menu_burstfiremod_wp_mod_burst_count_2",
-			"menu_burstfiremod_wp_mod_burst_count_3",
-			"menu_burstfiremod_wp_mod_burst_count_4"
-		},
-		value = 1,
-		menu_id = "blackmarket_customize_burstfire",
-		priority = 1
-	})
---]]
-end)
-
-Hooks:Add("MenuManagerBuildCustomMenus", "burstfiremod_MenuManagerBuildCustomMenus", function(menu_manager, nodes)
---[[
-	local burstfiremod_customize_menu = MenuHelper:BuildMenu(
-		"blackmarket_customize_burstfire",{
-			--area_bg = "none",
-			--back_callback = "callback_burstfiremod_back",
-			--focus_changed_callback = "callback_burstfiremod_focus"
-		}
-	)
-	nodes["blackmarket_customize_burstfire"] = burstfiremod_customize_menu
-	--]]
-	--MenuHelper:AddMenuItem(nodes.blt_options,"blackmarket_customize_burstfire","bm_menu_btn_customize_burstfire","bm_menu_btn_customize_burstfire_desc")
-end)
-
 Hooks:Add("MenuManagerInitialize", "burstfiremod_MenuManagerInitialize", function(menu_manager)
-	--MenuInput
 	MenuCallbackHandler.weapon_burstfire_count_enabled = function(self)
 		return true
 	end
@@ -112,11 +84,35 @@ Hooks:Add("MenuManagerInitialize", "burstfiremod_MenuManagerInitialize", functio
 		return true
 	end
 	MenuCallbackHandler.apply_weapon_burstfire_count = function(self,item)
-		Print("Apply weapon burstfire count",item,debug.traceback())
-		--_G.asdfddfd = item
+		local active_menu = managers.menu:active_menu()
+		if not active_menu then
+			return false
+		end
+		local logic = active_menu.logic
+		if not logic then
+			return false
+		end
+		local node = logic:selected_node()
+		if not node then
+			return false
+		end
+		local data = node:parameters().menu_component_data
+		if data then
+			local slot = data.slot
+			local category = data.category
+			local crafted_weapon = category and slot and managers.blackmarket:get_crafted_category_slot(category,slot)
+			if crafted_weapon then
+				local burstcount_item = node:item("burst_count")
+				if burstcount_item then
+					crafted_weapon.part_burst_count = burstcount_item:value()
+				end
+			end
+		else
+			--Print("Apply (no data)")
+		end
 	end
 	MenuCallbackHandler.callback_burstfiremod_wp_mod_set_burst_count = function(self,item)
-		Print("Set burst count:",item:value())
+		--Print("Set burst count:",item:value())
 	end
 	
 	MenuCallbackHandler.callback_burstfiremod_menu_back = function(self)
