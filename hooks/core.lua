@@ -1,3 +1,6 @@
+-- todo fix customize burst menu navigation (make it less janky)
+-- todo make mod options menu generate multiplechoice from _LOOKUP_BURST_COUNT so it's easier to change in the future
+
 BurstFireMod = BurstFireMod or {
 	save_path = SavePath .. "burstfiremod_settings.json",
 	options_path = ModPath .. "menu/options.json",
@@ -10,17 +13,11 @@ BurstFireMod = BurstFireMod or {
 }
 BurstFireMod.settings = table.deep_map_copy(BurstFireMod.default_settings)
 
-BurstFireMod._LOOKUP_BURST_COUNT = {
+BurstFireMod._LOOKUP_BURST_COUNT = { -- possible burstfire counts
 	2,
 	3,
 	4
 }
-BurstFireMod._REVERSE_LOOKUP_BURST_COUNT = {}
-for k,v in pairs(BurstFireMod._LOOKUP_BURST_COUNT) do 
-	BurstFireMod._REVERSE_LOOKUP_BURST_COUNT[v] = k
-end
-
-
 
 function BurstFireMod:get_default_burst_count()
 	return self.settings.default_burst_count
@@ -116,7 +113,9 @@ Hooks:Add("MenuManagerInitialize", "burstfiremod_MenuManagerInitialize", functio
 	end
 	
 	MenuCallbackHandler.callback_burstfiremod_menu_back = function(self)
-		if BurstFireMod._needs_upd_burst_count then -- if setting was changed, change the burst count on any and all applicable guns
+		if BurstFireMod._needs_upd_burst_count then
+			-- on exiting the menu, if setting was changed, change the burst count on any and all applicable guns
+			-- (instead of updating every weapon every time the user changes the setting immediately)
 			BurstFireMod._needs_upd_burst_count = nil
 			local player = managers.player and managers.player:local_player()
 			if alive(player) then
@@ -141,7 +140,6 @@ Hooks:Add("MenuManagerInitialize", "burstfiremod_MenuManagerInitialize", functio
 	end
 	MenuCallbackHandler.callback_burstfiremod_default_burst_count = function(self,item)
 		BurstFireMod.settings.default_burst_count = math.round(item:value())
-		-- apply to all weapons
 		BurstFireMod:save_settings()
 		BurstFireMod._needs_upd_burst_count = true
 	end
