@@ -66,6 +66,7 @@ Hooks:Add("MenuManagerSetupCustomMenus", "burstfiremod_MenuManagerSetupCustomMen
 		}
 	}
 	local noed = core:import("CoreMenuNode").MenuNode:new(new_node)
+	noed:set_callback_handler(managers.menu._registered_menus.menu_main.callback_handler)
 	nodes["blackmarket_customize_burstfire"] = noed
 end)
 
@@ -104,6 +105,9 @@ Hooks:Add("MenuManagerBuildCustomMenus", "burstfiremod_MenuManagerBuildCustomMen
 end)
 
 Hooks:Add("MenuManagerInitialize", "burstfiremod_MenuManagerInitialize", function(menu_manager)
+	MenuCallbackHandler.weapon_burstfire_count_enabled = function(self)
+		return true
+	end
 	MenuCallbackHandler.should_show_weapon_burstfire_count_apply = function(self)
 		return true
 	end
