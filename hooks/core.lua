@@ -19,6 +19,8 @@ BurstFireMod._LOOKUP_BURST_COUNT = { -- possible burstfire counts
 	4
 }
 
+BurstFireMod.menu_id = "burstfiremod_options"
+
 function BurstFireMod:get_default_burst_count()
 	return self.settings.default_burst_count
 end
@@ -48,7 +50,11 @@ function BurstFireMod:save_settings()
 	end
 end
 
+
 Hooks:Add("MenuManagerSetupCustomMenus", "burstfiremod_MenuManagerSetupCustomMenus", function(menu_manager, nodes)
+	MenuHelper:NewMenu(BurstFireMod.menu_id)
+	
+	
 	local new_node = {
 		_meta = "node",
 		align_line_proportions = 0.7,
@@ -71,6 +77,41 @@ Hooks:Add("MenuManagerSetupCustomMenus", "burstfiremod_MenuManagerSetupCustomMen
 		noed:set_callback_handler(main_menu.callback_handler)
 	end
 	nodes["blackmarket_customize_burstfire"] = noed
+end)
+
+Hooks:Add("MenuManagerPopulateCustomMenus", "burstfiremod_MenuManagerPopulateCustomMenus", function(menu_manager, nodes)
+	MenuHelper:AddSlider({
+		id = "burstfiremod_default_burst_count",
+		title = "menu_burstfiremod_default_burst_count_title",
+		desc = "menu_burstfiremod_default_burst_count_desc",
+		callback = "callback_burstfiremod_default_burst_count",
+		value = BurstFireMod.settings.default_burst_count,
+		default_value = BurstFireMod.default_settings.default_burst_count,
+		min = BurstFireMod._LOOKUP_BURST_COUNT[1],
+		max = BurstFireMod._LOOKUP_BURST_COUNT[#BurstFireMod._LOOKUP_BURST_COUNT],
+		step = 1,
+		show_value = true,
+		menu_id = BurstFireMod.menu_id,
+		priority = 1
+	})
+	MenuHelper:AddToggle({
+		id = "burstfiremod_use_global_burst",
+		title = "menu_burstfiremod_use_global_burst_title",
+		desc = "menu_burstfiremod_use_global_burst_desc",
+		callback = "callback_burstfiremod_use_global_burst",
+		value = BurstFireMod.settings.use_global_burst,
+		menu_id = BurstFireMod.menu_id,
+		priority = 2
+	})
+end)
+
+Hooks:Add("MenuManagerBuildCustomMenus", "burstfiremod_MenuManagerBuildCustomMenus", function( menu_manager, nodes )
+	nodes[BurstFireMod.menu_id] = MenuHelper:BuildMenu(BurstFireMod.menu_id, {
+		back_callback = "callback_burstfiremod_menu_back",
+		focus_changed_callback = nil
+		--,area_bg = "half"
+	})
+	MenuHelper:AddMenuItem(nodes.blt_options,BurstFireMod.menu_id,"menu_burstfiremod_title","menu_burstfiremod_desc")
 end)
 
 Hooks:Add("MenuManagerInitialize", "burstfiremod_MenuManagerInitialize", function(menu_manager)
@@ -144,5 +185,4 @@ Hooks:Add("MenuManagerInitialize", "burstfiremod_MenuManagerInitialize", functio
 		BurstFireMod._needs_upd_burst_count = true
 	end
 	BurstFireMod:load_settings()
-	MenuHelper:LoadFromJsonFile(BurstFireMod.options_path, BurstFireMod, BurstFireMod.settings)
 end)
