@@ -1,4 +1,12 @@
-core:import("CoreMenuItemOption")
+-- todo make ws, connect input
+-- check CoreMenuNodeGui.NodeGui for inherited input stuff
+
+
+
+local CoreMenuItemOption = core:import("CoreMenuItemOption")
+Hooks:PostHook(CoreMenuItemOption.ItemOption,"trigger","fadffdsddddfdfdfsf",function(self)
+	Print("Triggered",self:name())
+end)
 require("lib/managers/menu/MenuInitiatorBase")
 require("lib/managers/menu/renderers/MenuNodeBaseGui")
 
@@ -12,10 +20,7 @@ function MenuCustomizeBurstfireInitiator:modify_node(original_node,node_data)
 end
 
 function MenuCustomizeBurstfireInitiator:setup_node(node, node_data)
-	Print("Customize setup node")
-	_G.testnode5 = node
-	_G.testnode6 = node_data
-	_G.testnode7 = self
+	Print("Customize setup node",self)
 	
 	node:clean_items()
 
@@ -23,9 +28,9 @@ function MenuCustomizeBurstfireInitiator:setup_node(node, node_data)
 	node.topic_params = node_data.topic_params
 	
 	local crafted = managers.blackmarket:get_crafted_category_slot(node_data.category, node_data.slot)
-	
-	if not crafted or not crafted.cosmetics then
-		return node
+	Print("MenuCustomizeBurstfireInitiator:setup_node()",node_data.category,node_data.slot)
+	if not crafted then
+		--return node
 	end
 	
 	--node.burst_count_data = {}
@@ -35,43 +40,50 @@ function MenuCustomizeBurstfireInitiator:setup_node(node, node_data)
 			localize = true,
 			_meta = "option",
 			value = "2",
-			text_id = menu_burstfiremod_wp_mod_burst_count_2,
+			text_id = "menu_burstfiremod_wp_mod_burst_count_2",
 			index = 1
 		},
 		{
 			localize = true,
 			_meta = "option",
 			value = "3",
-			text_id = menu_burstfiremod_wp_mod_burst_count_3,
+			text_id = "menu_burstfiremod_wp_mod_burst_count_3",
 			index = 2
 		},
 		{
 			localize = true,
 			_meta = "option",
 			value = "4",
-			text_id = menu_burstfiremod_wp_mod_burst_count_4,
+			text_id = "menu_burstfiremod_wp_mod_burst_count_4",
 			index = 3
 		}
 	}
 	
 	local burstcount_item = self:create_multichoice(node, burstcount_options, {
-		callback = "refresh_node",
+		callback = "callback_burstfiremod_wp_mod_set_burst_count",
+		visible_callback = "should_show_weapon_burstfire_count_apply",
+		enabled_callback = "weapon_burstfire_count_enabled",
 		name = "burst_count",
 		text_id = "menu_burstfiremod_wp_mod_set_burst_count_title"
 	})
-	burstcount_item:set_value("2")
+	burstcount_item:set_value("3")
 	
 	local new_item = nil
 	local apply_params = {
 		visible_callback = "should_show_weapon_burstfire_count_apply",
+		enabled_callback = "weapon_burstfire_count_enabled",
 		name = "apply",
+		last_item="true",
+		previous_node = "true",
+		--back = true,
 		callback = "apply_weapon_burstfire_count",
 		text_id = "dialog_apply",
+		vertical = "bottom",
 		align = "right"
 	}
-	new_item = node:create_item({}, apply_params)
-
-	new_item:set_enabled(false)
+	new_item = node:create_item({
+		--type = "CoreMenuItem.Item"
+	}, apply_params)
 	node:add_item(new_item)
 
 --[[
@@ -103,15 +115,22 @@ function MenuCustomizeBurstfireInitiator:setup_node(node, node_data)
 	color_item:set_value(weapon_color_id)
 	self:create_divider(node, "padding", nil, 10)
 	
+--]]
 	node.randomseed = os.time()
 
 	math.randomseed(node.randomseed)
---]]
 
 	return node
 end
 
 
+function MenuCustomizeBurstfireInitiator:previous_page()
+	Print("Prev page")
+end
+
+function MenuCustomizeBurstfireInitiator:next_page()
+	Print("Next page")
+end
 
 
 function MenuCustomizeBurstfireInitiator:refresh_node(node)
@@ -146,9 +165,8 @@ function MenuNodeCustomizeBurstGui:init(node,layer,parameters, ...)
 	MenuNodeCustomizeBurstGui.super.init(self, node, layer, parameters, ...)
 	
 	self:setup()
-	_G.testnode = node
-	_G.testnode2 = self
-	_G.testnode3 = true
+	
+	_G.testnode = self
 end
 
 function MenuNodeCustomizeBurstGui:setup(...)
@@ -238,13 +256,7 @@ function MenuNodeCustomizeBurstGui:_setup_item_panel(safe_rect, res, ...)
 
 
 
-
-
-
-
-
-
-
+--[[
 
 
 	self._TEST_OBJECT = self.item_panel:rect({
@@ -252,7 +264,7 @@ function MenuNodeCustomizeBurstGui:_setup_item_panel(safe_rect, res, ...)
 		alpha = 0.5,
 		color = Color.red
 	})
-	
+	--]]
 	--[[
 	self._text_panel = self._item_panel_parent:panel({
 		name = "title_panel",
@@ -291,6 +303,7 @@ function MenuNodeCustomizeBurstGui:reload_item(item, ...)
 end
 
 function MenuNodeCustomizeBurstGui:close(...)
+	--self:_end_customize_controller()
 	MenuNodeCustomizeBurstGui.super.close(self,...)
 end
 
@@ -307,22 +320,6 @@ function MenuNodeCustomizeBurstGui:_align_marker(row_item)
 	self._marker_data.marker:set_world_right(self.item_panel:world_right())
 end
 
-
-function MenuNodeCustomizeBurstGui:_setup_item_rows(node)
-	MenuNodeCustomizeBurstGui.super._setup_item_rows(self, node)
-end
-
-function MenuNodeCustomizeBurstGui:reload_item(item)
-	MenuNodeCustomizeBurstGui.super.reload_item(self, item)
-
-	local row_item = self:row_item(item)
-
-	if row_item and alive(row_item.gui_panel) then
-		row_item.gui_panel:set_halign("right")
-		row_item.gui_panel:set_right(self.item_panel:w())
-	end
-end
-
 function MenuNodeCustomizeBurstGui:_rec_round_object(object)
 	if object.children then
 		for i, d in ipairs(object:children()) do
@@ -335,8 +332,8 @@ function MenuNodeCustomizeBurstGui:_rec_round_object(object)
 	object:set_position(math.round(x), math.round(y))
 end
 
-function MenuNodeCustomizeBurstGui:input_focus()
 --[[
+function MenuNodeCustomizeBurstGui:input_focus()
 	local current_item = managers.menu:active_menu().logic:selected_item()
 	
 	if self._mouse_over_row_item then
@@ -350,9 +347,8 @@ function MenuNodeCustomizeBurstGui:input_focus()
 	if self._mouse_over_tab_panel or self._prev_page_highlighted or self._next_page_highlighted then
 		return 1
 	end
-	--]]
-	return 1
 end
+--]]
 
 function MenuNodeCustomizeBurstGui:make_fine_text(text)
 	local x, y, w, h = text:text_rect()
