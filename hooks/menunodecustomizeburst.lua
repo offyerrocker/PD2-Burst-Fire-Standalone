@@ -4,9 +4,7 @@
 
 
 local CoreMenuItemOption = core:import("CoreMenuItemOption")
-Hooks:PostHook(CoreMenuItemOption.ItemOption,"trigger","fadffdsddddfdfdfsf",function(self)
-	Print("Triggered",self:name())
-end)
+
 require("lib/managers/menu/MenuInitiatorBase")
 require("lib/managers/menu/renderers/MenuNodeBaseGui")
 
@@ -32,8 +30,6 @@ function MenuCustomizeBurstfireInitiator:setup_node(node, node_data)
 	if not crafted then
 		--return node
 	end
-	
-	--node.burst_count_data = {}
 	
 	local burstcount_options = {
 		{
@@ -66,6 +62,7 @@ function MenuCustomizeBurstfireInitiator:setup_node(node, node_data)
 		name = "burst_count",
 		text_id = "menu_burstfiremod_wp_mod_set_burst_count_title"
 	})
+	_G.asdfd1 = burstcount_item
 	burstcount_item:set_value("3")
 	
 	local new_item = nil
@@ -73,17 +70,15 @@ function MenuCustomizeBurstfireInitiator:setup_node(node, node_data)
 		visible_callback = "should_show_weapon_burstfire_count_apply",
 		enabled_callback = "weapon_burstfire_count_enabled",
 		name = "apply",
-		last_item="true",
+		last_item = "true",
 		previous_node = "true",
-		--back = true,
 		callback = "apply_weapon_burstfire_count",
-		text_id = "dialog_apply",
+		text_id = "menu_back",
 		vertical = "bottom",
 		align = "right"
 	}
-	new_item = node:create_item({
-		--type = "CoreMenuItem.Item"
-	}, apply_params)
+	new_item = node:create_item({}, apply_params)
+	_G.asdfd2 = new_item
 	node:add_item(new_item)
 
 --[[
@@ -124,13 +119,11 @@ function MenuCustomizeBurstfireInitiator:setup_node(node, node_data)
 end
 
 
-function MenuCustomizeBurstfireInitiator:previous_page()
-	Print("Prev page")
-end
+--function MenuCustomizeBurstfireInitiator:previous_page()
+--end
 
-function MenuCustomizeBurstfireInitiator:next_page()
-	Print("Next page")
-end
+--function MenuCustomizeBurstfireInitiator:next_page()
+--end
 
 
 function MenuCustomizeBurstfireInitiator:refresh_node(node)
@@ -154,7 +147,9 @@ function MenuNodeCustomizeBurstGui:init(node,layer,parameters, ...)
 		parameters.marker_alpha = 1
 		parameters.to_upper = true
 	end
-
+	
+	self._row_selection_index = 0
+	
 	--[[
 	local burst_count = node and node:item("burstfiremod_wp_mod_set_burst_count")
 	if burst_count then 
@@ -167,6 +162,7 @@ function MenuNodeCustomizeBurstGui:init(node,layer,parameters, ...)
 	self:setup()
 	
 	_G.testnode = self
+	_G.testnode2 = node
 end
 
 function MenuNodeCustomizeBurstGui:setup(...)
@@ -289,6 +285,11 @@ end
 
 function MenuNodeCustomizeBurstGui:_setup_item_rows(node, ...)
 	MenuNodeCustomizeBurstGui.super._setup_item_rows(self, node, ...)
+	
+--	self:_insert_row_item(node:item("apply"),node,1)
+--	self:_insert_row_item(node:item("burst_count"),node,2)
+	
+	
 end
 
 function MenuNodeCustomizeBurstGui:reload_item(item, ...)
@@ -332,23 +333,8 @@ function MenuNodeCustomizeBurstGui:_rec_round_object(object)
 	object:set_position(math.round(x), math.round(y))
 end
 
---[[
 function MenuNodeCustomizeBurstGui:input_focus()
-	local current_item = managers.menu:active_menu().logic:selected_item()
-	
-	if self._mouse_over_row_item then
-		local mouse_over_item = self._mouse_over_row_item.item
-
-		if current_item == mouse_over_item and mouse_over_item.TYPE == "grid" then
-			return 1
-		end
-	end
-
-	if self._mouse_over_tab_panel or self._prev_page_highlighted or self._next_page_highlighted then
-		return 1
-	end
 end
---]]
 
 function MenuNodeCustomizeBurstGui:make_fine_text(text)
 	local x, y, w, h = text:text_rect()
@@ -360,274 +346,59 @@ function MenuNodeCustomizeBurstGui:make_fine_text(text)
 end
 
 
---[[
-function MenuNodeCustomizeWeaponColorGui:mouse_moved(o, x, y)
-	local used = false
-	local icon = "arrow"
 
-	if managers.menu_scene:input_focus() then
-		self._mouse_over_row_item = nil
-		self._mouse_over_tab_panel = nil
-
-		return used, icon
-	end
-
-	local current_item = managers.menu:active_menu().logic:selected_item()
-	local current_row_item = current_item and self:row_item(current_item)
-	local selected_row_item = nil
-
-	if current_row_item and current_row_item.gui_panel and current_row_item.gui_panel:inside(x, y) then
-		selected_row_item = current_row_item
-	else
-		local inside_item_panel_parent = self:item_panel_parent():inside(x, y)
-		local item, is_inside = nil
-
-		for _, row_item in pairs(self.row_items) do
-			item = row_item.item
-			is_inside = false
-
-			if item and not item.no_mouse_select then
-				is_inside = item.TYPE == "grid" and item:scroll_bar_grabbed(row_item) and true or inside_item_panel_parent and row_item.gui_panel:inside(x, y)
-			end
-
-			if is_inside then
-				selected_row_item = row_item
-
-				break
-			end
-		end
-	end
-
-	if selected_row_item then
-		local selected_name = selected_row_item.name
-		used = true
-		icon = "link"
-
-		if not current_item or selected_name ~= current_item:name() then
-			managers.menu:active_menu().logic:mouse_over_select_item(selected_name, false)
-
-			current_row_item = selected_row_item
-			current_item = selected_row_item.item
-		end
-
-		if current_item then
-			self._mouse_over_row_item = current_row_item
-
-			if current_item.TYPE == "grid" then
-				icon = current_item:mouse_moved(x, y, current_row_item)
-			elseif current_item.TYPE == "multi_choice" then
-				local inside_arrow_left = current_row_item.arrow_left:visible() and current_row_item.arrow_left:inside(x, y)
-				local inside_arrow_right = current_row_item.arrow_right:visible() and current_row_item.arrow_right:inside(x, y)
-				local inside_gui_text = current_row_item.arrow_left:visible() and current_row_item.arrow_right:visible() and current_row_item.gui_text:inside(x, y)
-				local inside_choice_panel = current_row_item.choice_panel:visible() and current_row_item.choice_panel:inside(x, y)
-
-				if inside_arrow_left or inside_arrow_right or inside_gui_text or inside_choice_panel then
-					icon = "link"
-				else
-					icon = "arrow"
-				end
-			end
-		end
-	else
-		self._mouse_over_row_item = nil
-	end
-
-	self._mouse_over_tab_panel = self._tab_scroll_parent_panel:inside(x, y)
-	local prev_page = self._tab_panel:child("prev_page")
-
-	if alive(prev_page) then
-		local is_inside = prev_page:inside(x, y) and prev_page:visible()
-
-		if is_inside then
-			used = true
-			icon = "link"
-		end
-
-		if is_inside then
-			if not self._prev_page_highlighted then
-				self._prev_page_highlighted = true
-
-				managers.menu_component:post_event("highlight")
-				prev_page:set_color(tweak_data.screen_colors.button_stage_2)
-			end
-
-			return used, icon
-		elseif self._prev_page_highlighted then
-			self._prev_page_highlighted = nil
-
-			prev_page:set_color(tweak_data.screen_colors.button_stage_3)
-		end
-	end
-
-	local next_page = self._tab_panel:child("next_page")
-
-	if alive(next_page) then
-		local is_inside = next_page:inside(x, y) and next_page:visible()
-
-		if is_inside then
-			used = true
-			icon = "link"
-		end
-
-		if is_inside then
-			if not self._next_page_highlighted then
-				self._next_page_highlighted = true
-
-				managers.menu_component:post_event("highlight")
-				next_page:set_color(tweak_data.screen_colors.button_stage_2)
-			end
-
-			return used, icon
-		elseif self._next_page_highlighted then
-			self._next_page_highlighted = nil
-
-			next_page:set_color(tweak_data.screen_colors.button_stage_3)
-		end
-	end
-
-	local color_group_data = self.node.color_group_data
-
-	if color_group_data.highlighted then
-		local highlighted_tab = self._tabs[color_group_data.highlighted]
-
-		if highlighted_tab.panel:inside(x, y) then
-			return true, color_group_data.highlighted == color_group_data.selected and "arrow" or "link"
-		end
-
-		local prev_highlighted = color_group_data.highlighted
-		color_group_data.highlighted = nil
-
-		self:_update_tab(prev_highlighted)
-	end
-
-	if self._mouse_over_tab_panel then
-		for index, tab in ipairs(self._tabs) do
-			if tab.panel:inside(x, y) then
-				color_group_data.highlighted = index
-
-				self:_update_tab(index)
-
-				used = true
-				icon = "link"
-
-				if color_group_data.selected ~= index then
-					icon = "arrow"
-
-					managers.menu_component:post_event("highlight")
-				end
-
-				break
-			end
-		end
-	end
-
-	return used, icon
-end
-
-function MenuNodeCustomizeWeaponColorGui:mouse_pressed(button, x, y)
+function MenuNodeCustomizeBurstGui:confirm_pressed()
+	
 	local active_menu = managers.menu:active_menu()
-
-	if not managers.menu:active_menu() then
+	if not active_menu then 
 		return
 	end
-
 	local logic = active_menu.logic
-	local input = active_menu.input
-
-	if self._mouse_over_row_item then
-		local mouse_over_item = self._mouse_over_row_item.item
-
-		if button == Idstring("mouse wheel down") then
-			if mouse_over_item.TYPE == "grid" then
-				return mouse_over_item:wheel_scroll_start(-1, self._mouse_over_row_item)
-			end
-		elseif button == Idstring("mouse wheel up") and mouse_over_item.TYPE == "grid" then
-			return mouse_over_item:wheel_scroll_start(1, self._mouse_over_row_item)
-		end
-
-		if button == Idstring("0") then
-			if mouse_over_item.TYPE == "grid" then
-				mouse_over_item:mouse_pressed(button, x, y, self._mouse_over_row_item)
-			elseif mouse_over_item.TYPE == "multi_choice" then
-				if self._mouse_over_row_item.arrow_right:inside(x, y) then
-					if mouse_over_item:next() then
-						input:post_event("selection_next")
-						logic:trigger_item(true, mouse_over_item)
-					end
-				elseif self._mouse_over_row_item.arrow_left:inside(x, y) then
-					if mouse_over_item:previous() then
-						input:post_event("selection_previous")
-						logic:trigger_item(true, mouse_over_item)
-					end
-				elseif self._mouse_over_row_item.gui_text:inside(x, y) then
-					if self._mouse_over_row_item.align == "left" then
-						if mouse_over_item:previous() then
-							input:post_event("selection_previous")
-							logic:trigger_item(true, mouse_over_item)
-						end
-					elseif mouse_over_item:next() then
-						input:post_event("selection_next")
-						logic:trigger_item(true, mouse_over_item)
-					end
-				elseif self._mouse_over_row_item.choice_panel:inside(x, y) and mouse_over_item:enabled() then
-					mouse_over_item:popup_choice(self._mouse_over_row_item)
-					input:post_event("selection_next")
-					logic:trigger_item(true, mouse_over_item)
-				end
-			elseif mouse_over_item.TYPE == "divider" then
-				-- Nothing
-			else
-				local item = logic:selected_item()
-
-				if item then
-					input._item_input_action_map[item.TYPE](item, input._controller, true)
-				end
-			end
-
-			return true
-		end
-	elseif self._mouse_over_tab_panel then
-		if button == Idstring("mouse wheel down") then
-			self:next_page()
-
-			return true
-		elseif button == Idstring("mouse wheel up") then
-			self:previous_page()
-
-			return true
-		end
-	elseif self._prev_page_highlighted then
-		self:previous_page()
-
-		return true
-	elseif self._next_page_highlighted then
-		self:next_page()
-
-		return true
+	
+	Print("PRESSED",self._row_selection_index)
+	local row_item = self.row_items[self._row_selection_index+1]
+	if row_item then 
+		local item = row_item.item
+		logic:trigger_item(true, item)
+		--item:trigger()
 	end
-
-	if button == Idstring("0") then
-		local color_group_data = self.node.color_group_data
-		local highlighted_tab = self._tabs[color_group_data.highlighted]
-
-		if highlighted_tab and highlighted_tab.panel:inside(x, y) then
-			self:_set_color_group_index(color_group_data.highlighted)
-
-			return true
-		end
-	end
+	return true
 end
 
-function MenuNodeCustomizeWeaponColorGui:mouse_released(button, x, y)
-	local item = nil
-
-	for _, row_item in pairs(self.row_items) do
-		item = row_item.item
-
-		if item.TYPE == "grid" then
-			row_item.item:mouse_released(button, x, y, row_item)
-		end
+function MenuNodeCustomizeBurstGui:move_up()
+	local active_menu = managers.menu:active_menu()
+	if not active_menu then
+		return
 	end
+	self._row_selection_index = (self._row_selection_index + 1) % #self.row_items
+	Print("MOVE UP",self._row_selection_index)
+	self:_highlight_row_item(self.row_items[self._row_selection_index+1],false)
+	
+	active_menu.input:post_event("selection_previous")
+	return true
 end
 
---]]
+function MenuNodeCustomizeBurstGui:move_down()
+	local active_menu = managers.menu:active_menu()
+	if not active_menu then
+		return
+	end
+	
+	self._row_selection_index = (self._row_selection_index - 1) % #self.row_items
+	Print("MOVE DOWN",self._row_selection_index)
+	self:_highlight_row_item(self.row_items[self._row_selection_index+1],false)
+	
+	active_menu.input:post_event("selection_next")
+	return true
+end
+
+function MenuNodeCustomizeBurstGui:move_left()
+	
+	Print("MOVE LEFT")
+	return true
+end
+
+function MenuNodeCustomizeBurstGui:move_right()
+	Print("MOVE RIGHT")
+	return true
+end

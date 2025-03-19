@@ -100,20 +100,20 @@ Hooks:Add("MenuManagerBuildCustomMenus", "burstfiremod_MenuManagerBuildCustomMen
 	)
 	nodes["blackmarket_customize_burstfire"] = burstfiremod_customize_menu
 	--]]
-	
 	--MenuHelper:AddMenuItem(nodes.blt_options,"blackmarket_customize_burstfire","bm_menu_btn_customize_burstfire","bm_menu_btn_customize_burstfire_desc")
 end)
 
 Hooks:Add("MenuManagerInitialize", "burstfiremod_MenuManagerInitialize", function(menu_manager)
+	--MenuInput
 	MenuCallbackHandler.weapon_burstfire_count_enabled = function(self)
 		return true
 	end
 	MenuCallbackHandler.should_show_weapon_burstfire_count_apply = function(self)
 		return true
 	end
-	MenuCallbackHandler.apply_weapon_burstfire_count = function(self,data)
-		Print("Apply weapon burstfire count",data)
-		_G.asdfddfd = data
+	MenuCallbackHandler.apply_weapon_burstfire_count = function(self,item)
+		Print("Apply weapon burstfire count",item,debug.traceback())
+		--_G.asdfddfd = item
 	end
 	MenuCallbackHandler.callback_burstfiremod_wp_mod_set_burst_count = function(self,item)
 		Print("Set burst count:",item:value())
