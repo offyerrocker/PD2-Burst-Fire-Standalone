@@ -173,3 +173,16 @@ Hooks:PostHook(NewRaycastWeaponBase,"clbk_assembly_complete","weaponbase_burstfi
 		-- no need to query blackmarketmanager every time for this
 	end
 end)
+
+-- this should fix crashing from npcs or akimbo weapons using burst firemode
+Hooks:PreHook(NewRaycastWeaponBase,"fire","weaponbase_burstfiremod_firepre",function(self,...)
+	if self._fire_mode == ids_burst then
+		self._burstfiremod_cache_bullets_fired = self._bullets_fired
+		self._bullets_fired = self._bullets_fired or 0 --self._burst_count
+	end
+end)
+Hooks:PostHook(NewRaycastWeaponBase,"fire","weaponbase_burstfiremod_firepost",function(self,...)
+	if self._fire_mode == ids_burst then 
+		self._bullets_fired,self._burstfiremod_cache_bullets_fired = self._burstfiremod_cache_bullets_fired,nil
+	end
+end)

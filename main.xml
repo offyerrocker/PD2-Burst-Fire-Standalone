@@ -2,7 +2,7 @@
 	<Localization directory="l10n" default="en.json">
 		<loc file="en.json" language="english"/>
 	</Localization>
-	<AssetUpdates id="51457" version="1.1.0" provider="modworkshop"/>
+	<AssetUpdates id="51457" version="1.1.1" provider="modworkshop"/>
 
 	<GlobalValue id="burstfiremod" color="Color(0.33,0.66,1)"/>
 
